@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ### Interactive Map
 ## Land use changes and anthropogenic impacts due to rice fields in Santa Fe (Argentina)
 
@@ -34,3 +35,6 @@ _Carlos David Clauser, Julieta Peluso, Carolina Aronzon, Vanesa Ali Santoro and 
  
 _Franco David Barrionuevo:_
 - ECyT-UNSAM (Science and Technology School, National University of San Martín), Argentina
+=======
+.
+>>>>>>> 909af851cf44cec18b5c2c42d346d036d0d90a5d
