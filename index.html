@@ -371,10 +371,7 @@
             })
             .then(function(data) {
                     geojsonLayer01 = L.geoJSON(data, {
-                        style: {weight : 0.75,
-                                color : "#362b53",
-                                fillColor : "yellow",
-                                fillOpacity : 0.1},
+                        style: stat_style,
                         onEachFeature: function(feature, layer) {
                             layer.on("mouseover", highlight_feature);
                             layer.on("mouseout", function(e) {
@@ -421,6 +418,52 @@
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
+
+        function stat_color(d) {
+            if (d > 208031) return "#d7191c";
+            if (d > 200031) return "#dd3027";
+            if (d > 192031) return "#e34731";
+            if (d > 184031) return "#ee7546";
+            if (d > 176031) return "#f48c51";
+            if (d > 168031) return "#faa35c";
+            if (d > 160031) return "#fdb468";
+            if (d > 152031) return "#fdc177";
+            if (d > 144031) return "#fecd85";
+            if (d > 136031) return "#feda94";
+            if (d > 128031) return "#fee6a2";
+            if (d > 120031) return "#006837";
+            if (d > 112031) return "#004529";
+            if (d > 104031) return "#2c7bb6";
+            if (d > 96031)  return "#4575b4";
+            if (d > 88031)  return "#74add1";
+            if (d > 80031)  return "#abd9e9";
+            if (d > 72031)  return "#e0f3f8";
+            if (d > 64031)  return "#ffffcc";
+            if (d > 56031)  return "#ffeda0";
+            if (d > 48031)  return "#feb24c";
+            if (d > 40031)  return "#fd8d3c";
+            if (d > 32031)  return "#f03b20";
+            if (d > 24031)  return "#bd0026";
+            if (d > 16031)  return "#800026";
+            if (d > 8031)   return "#4d004b";
+            if (d > 0) "#2b83ba";
+            return "None";
+            }
+
+        function stat_style(feature) {
+            return {
+                fillColor: stat_color(feature.properties.GenB_Total_m3y),
+                weight: 1,
+                opacity: 1,
+                color: "black",
+                fillOpacity: 1
+            };
+        }
+
+
+        // -------------------------------------------------------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------------------------------
+
         // PANELS AND CONTROLS CONFIGURATION
 
         // Legend panel--------------------------------------------------------------------------------------------------------------------------
