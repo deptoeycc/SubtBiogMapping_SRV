@@ -304,254 +304,128 @@
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
+
+        let info = L.control({position: "topright"});
+
+        function infoDiv(divWidth) {
+            if (info._map) {
+                // Remove existing control if it's already added to the map
+                info.remove();
+            }
+
+            info.onAdd = function() {
+                let div = L.DomUtil.create("div", "info");
+                div.innerHTML = '<h4 id="dynamic-title" style="font-size: 17px;">Referencias</h4><p id="current_feature"></p>';
+                div.style.width = divWidth;
+                return div; // Return the div to be added to the map
+            };
+
+            info.addTo(map); // Add the control to the map
+        }
+
+        infoDiv('15em')
+
+        // -------------------------------------------------------------------------------------------------------------------------------------
+        // ---------------------------------------------------------------------------------------------------------------------------------
+
         // COMPLEMENTARY FUNCTIONS FOR SAMPLINSG POINTS DATA PROCESSING DEFINITION
 
-        function extractUniqueCampaigns(geojsonData) { // Extract unique campaign values from GeoJSON data
-            const campaigns = new Set(); // Set is a JavaScript data structure that automatically keeps only unique values
-            
-            if (geojsonData.features) {
-                geojsonData.features.forEach(feature => {
-                    // Check various possible property names for campaign
-                    const properties = feature.properties || {}; // Ensure properties is an object
-                    const campaignValue = properties.Sampling_date ||
-                                        'Unknown';
-                    
-                    if (campaignValue && campaignValue !== '') { // Only adds the value if it exists and isn't an empty string
-                        campaigns.add(campaignValue);
-                    }
-                });
-            }
-            
-            return Array.from(campaigns).sort();
+        let highlightStyle = {
+            weight: 5,
+            color: "yellow",
+            fillOpacity: 0.5
+        };
+
+        function highlight_feature(e) {
+            infoDiv('20em')
+            info_p = document.getElementById("current_feature");
+            info_h4 = document.getElementById("dynamic-title");
+            e.target.setStyle(highlightStyle);
+            e.target.bringToFront();
+            info_h4.innerText = "Departamentos"
+            //info_p.innerHTML =
+            //    "<b>Provincia:</b> " + e.target.feature.properties.nam_left + "<br>" +
+            //    "<b>Departamento:</b> " + e.target.feature.properties.nam_right + "<br>";
         }
 
-        function filterByFeature(feature, value) { // Filter GeoJSON data by a specific feature and value
-            if (!originalLayer) return;
-
-            let filteredData01 = originalLayer.features.filter(function(featureItem) {
-                return featureItem.properties[feature] === value;
-            });
-
-            let filteredData02 = filteredData01.filter(function(featureItem) {
-                return featureItem.properties["Observation"] !== "Not sampled"; //"Observation": "Not sampled"
-            });
-
-            updateLayer(filteredData02);
-        }
-
-        function updateLayer(filteredData) { // Update data according to the campaign filter and define events when features are hovered
-            if (geojsonLayer) {
-                map.removeLayer(geojsonLayer);
-            }
-
-            geojsonLayer = L.geoJSON(filteredData, {
-                pointToLayer: function(feature, latlng) {
-                    return L.marker(latlng, { icon: iconByWQI(feature.properties.WQI) });
-                },
-                onEachFeature: function(feature, layer) {
-                    layer.on("mouseover", function(e){ 
-                        info_feature_SamPoints(e); // Find it below
-                        show_IBRI(e); // Find it below
-                        show_Herbcs(e); // Find it below
-                        remove_legend(); // Find it below
-                        layer.setIcon(BigIconByWQI(feature.properties.WQI)); // Find it below
-                    });
-                    layer.on("mouseout", function(e) {
-                        remove_wqi(); // Find it below
-                        remove_IBRI(); // Find it below
-                        remove_Herbcs(); // Find it below
-                        show_legend(); // Find it below
-                        layer.setIcon(iconByWQI(feature.properties.WQI) ); // Find it below
-                    });
-                }
-            }).addTo(map);
+        function reset_highlight(e, gjLayer) {
+            infoDiv('15em')
+            e.target.bringToBack();
+            gjLayer.resetStyle(e.target);
+            info_p.innerHTML = "";
+            info_h4.innerText = "Referencias";
         }
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
         // LOAD AND PROCESS SAMPLING POINTS GEOJSON DATA
 
-        // Sampling points layer ---------------------------------------------------------------------------------------------------------------
-        let geojsonLayer = null; // Layer for sampling points
-        let originalLayer = null;
-        let campgInput = 'C1-Sowing 22-23'; // default value: first campaign (C1)
+        // Initializing political boundaries layers
+        let geojsonLayer01;
+        let layerGroup01 = L.layerGroup()// Departments boundaries
 
-        // Load campaign geojson data and define dropdown filtering button
-        fetch("data/data_campaigns_v1.geojson")
-            .then(r => r.json())
-            .then(geojsonData => {
-                const elements = extractUniqueCampaigns(geojsonData);
-
-                // Initialize the layer with all features
-                geojsonLayer = L.geoJSON(geojsonData, {
-                    pointToLayer: function(feature, latlng) {
-                        return L.marker(latlng, { icon: iconByWQI(feature.properties.WQI) });
-                },
-            }).addTo(map);
-
-                // Store original data for filtering
-                originalLayer = geojsonData;
-
-                // Filter by default
-                filterByFeature('Sampling_date', campgInput);
-
-                // Create dropdown control
-                let DDButtControl = L.control({ position: "topleft" });
-                DDButtControl.onAdd = function (map) {
-                    let div = L.DomUtil.create("div", "info"); //("div", "ddbutton_control");
-                    div.id = "ddbutton_control";
-
-                let title = document.createElement("h4");
-                title.innerText = "Select campaign";
-                title.classList.add("panel-title"); // Use a CSS class instead
-                div.appendChild(title);
-
-                    let select = L.DomUtil.create("select", "dropdown", div, placeholder="Select campaign");
-
-                    elements.forEach(el => {
-                        let option = document.createElement("option");
-                        option.value = el;
-                        option.text = el;
-                        if (el === campgInput) option.selected = true;
-                        select.appendChild(option);
-                    });
-
-                    select.addEventListener("change", function(e) {
-                        campgInput = e.target.value;
-                        filterByFeature('Sampling_date', campgInput);
-                    });
-
-                    return div;
-                };
-                DDButtControl.addTo(map);
-            });
-        
-        // Study area layers ---------------------------------------------------------------------------------------------------------------
-
-        let geojsonLayer01; // Paleochannel plain of the Bajo de los Saladillos (PPBS)
-        let geojsonLayer02; // Paddy fields 2022
-        let geojsonLayer03; // I leave this in case of need to add a third layer
-
-        let ppbsBounds = L.layerGroup()// ppbs layer group initialization
-        let paddyFields = L.layerGroup()// paddy fields active in 2022 layer group initialization
-
-        // Loading PPBS layer
-        fetch("data/Planicie_con_paleocauces_NW-SW_4326.geojson")
-            .then(function(response) {
-            return response.json();
-            })
-            .then(function(data) {
-            geojsonLayer01 = L.geoJSON(data, {
-                style: {
-                weight: 1,
-                color: "white",
-                fillOpacity: 0 // No fill color
-                }
-            });
-            ppbsBounds.addLayer(geojsonLayer01);
-            });
-
-        ppbsBounds.addTo(map);
-
-        // Loading active paddy fields by 2022 layer
-        fetch("data/paddy_fields_full.geojson")
+        // Loading Argentina departments boundaries layer
+        fetch("data/biogasGen_total_data_03.geojson")
             .then(function(response) {
                 return response.json();
             })
             .then(function(data) {
-                    geojsonLayer02 = L.geoJSON(data, {
-                        style: {
-                            weight : 0.75,
-                            color : "black",
-                            fillColor : "#0eb353",
-                            fillOpacity : 0.3},
+                    geojsonLayer01 = L.geoJSON(data, {
+                        style: {weight : 0.75,
+                                color : "#362b53",
+                                fillColor : "yellow",
+                                fillOpacity : 0.1},
+                        onEachFeature: function(feature, layer) {
+                            layer.on("mouseover", highlight_feature);
+                            layer.on("mouseout", function(e) {
+                                reset_highlight(e, geojsonLayer01);
+                            });
+                        }
                     });
-                    paddyFields.addLayer(geojsonLayer02);
+                    geojsonLayer01.addTo(map);
+                });
+
+        
+        // Study area layers ---------------------------------------------------------------------------------------------------------------
+
+        // Loading Argentina boundaries layer
+        fetch("data/Argentina_bound.geojson")
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {  // Add GeoJSON layer to the map once the file is loaded
+            L.geoJSON(data, {style: {weight : 2,
+                color : "black",
+                fillColor : "None",
+                fillOpacity : 0
+                }
+            })
+                .addTo(map);
             });
 
-        paddyFields.addTo(map);
+        // Loading Argentina provinces boundaries layer
+        fetch("data/Provincias_IGN_4326yMalvinas05.geojson")
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {  // Add GeoJSON layer to the map once the file is loaded
+                L.geoJSON(data, {style : {
+                    weight : 1.4,
+                    color : "black",
+                    fillColor : "none",
+                    fillOpacity : 0.2,
+                    }
+            })
+                .addTo(map);
+            });
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
         // PANELS AND CONTROLS CONFIGURATION
 
-        // Layers controller--------------------------------------------------------------------------------------------------------------------
-        let overlayBound = { // Overlay layers
-            "<b>Paleochannel Plain of the Bajo de los Saladillos (PPBS)</b>": ppbsBounds,
-            "<b>Rice fields</b>": paddyFields
-        };
-
-        // Panel for controller
-        let layers_panel = L.control({ position: "topleft" });
-        layers_panel.onAdd = function(map) {
-            let div = L.DomUtil.create("div", "info");
-            div.id = "layers_panel";
-            return div;
-        };
-        layers_panel.addTo(map);
-
-        // Layers controller
-        let customControl = L.control.layers(null, overlayBound, { collapsed: false });
-
-        // Panel settings
-        let panelDiv = document.getElementById("layers_panel");
-        if (panelDiv) {
-            let title = document.createElement("h4");
-            title.innerText = "Layers panel";
-            title.classList.add("panel-title"); // Use a CSS class instead
-            panelDiv.appendChild(title);
-
-            customControl.addTo(map);
-            panelDiv.appendChild(customControl.getContainer());
-        } 
-
-        // WQI panel---------------------------------------------------------------------------------------------------------------------------
-        let wqi_panel = L.control({position: "topright"}); // Referencias control
-        wqi_panel.remove()
-        //let IBRI_panel = L.control({position: "topright"}); // IBRI logo control
-
-        function show_wqi_panel(divWidth) {
-            if (wqi_panel._map) {
-                wqi_panel.remove(); // Remove existing control if already added
-            }
-
-            wqi_panel.onAdd = function() {
-                let div = L.DomUtil.create("div", "info");
-                div.innerHTML = `
-                    <h4 id="dynamic-title_wqi"></h4>
-                    <p id="wqi_value"></p>
-                    <p id="current_feature_wqi"></p>`;
-                div.style.width = divWidth //'30em';
-                div.id = "wqi_panel";
-                return div;
-            };
-
-            wqi_panel.addTo(map);
-        }
-
-        // IBRI panel--------------------------------------------------------------------------------------------------------------------------
-        let IBRI_panel = L.control({position: "topright"})
-        IBRI_panel.onAdd = function(map) {
-            let div = L.DomUtil.create("div", "info"); // change info by ibri_panel or similar
-            div.innerHTML = `<p id="ibri_value"></p>`;
-            div.style.width = '30em'; // Only keep width if it's dynamic
-            div.id = "ibri_panel";
-            return div;
-        };
-        // Herbicides panel--------------------------------------------------------------------------------------------------------------------
-        let Herbcs_panel = L.control({position: "topright"})
-        Herbcs_panel.onAdd = function(map) {
-            let div = L.DomUtil.create("div", "info"); // change info by ibri_panel or similar
-            div.innerHTML = `
-                <h4 id="dynamic-title_herbcs"> Agrochemicals in water </h4>
-                <p id="current_feature_herbcs"></p>`;
-            div.style.width = '30em'; // Only keep width if it's dynamic
-            div.id = "herbcs_panel";
-            return div;
-        };
-
         // Legend panel--------------------------------------------------------------------------------------------------------------------------
-        let legend = L.control({position: "bottomleft"}); // Create Leaflet control object for legend
+        
+        /*let legend = L.control({position: "bottomleft"}); // Create Leaflet control object for legend
 
         legend.onAdd = function() { // Function that runs when legend is added to map
             let div = L.DomUtil.create("div", "info");        
@@ -565,27 +439,12 @@
             return div;
         };
 
-        legend.addTo(map); // Add Legend to Map
+        legend.addTo(map); // Add Legend to Map */
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
         // PANELS AND CONTROLS EVENTS
 
-        function label_wqi(wqi) {
-            if (wqi > 95){
-                return "Excellent";
-            } else if (wqi > 80){
-                return "Good";
-            } else if (wqi > 65){
-                return "Bad";
-            } else if (wqi > 45){
-                return "Marginal";
-            } else if (wqi > 30){
-                return "Poor";
-            } else {
-                return "Very Poor";
-            }
-        }
 
         function info_feature_SamPoints(e) {
             //wqi_panel.addTo(map);
@@ -617,216 +476,10 @@
             "<b>Observations:</b> " + e.target.feature.properties.Observation + "<br>";
         }
 
-        function show_IBRI(e){
-            IBRI_panel.addTo(map);
-            setIBRIBackground(set_ibri_background(e.target.feature.properties.IBRI));
-            info_p = document.getElementById("ibri_value");
-            info_p.innerHTML =
-            "IBRI: " + e.target.feature.properties.IBRI
-        }
-
-        // Herbicides detected in water panel
-        function show_Herbcs(e){
-            Herbcs_panel.addTo(map);
-            
-            info_p = document.getElementById("current_feature_herbcs");
-            info_p.innerHTML = ""; // Clear content
-            
-            let content = "";
-            
-            // Cyhalofop
-            if (e.target.feature.properties.Cyhalofop !== "NA"){
-                const escapedValue = e.target.feature.properties.Cyhalofop.replace(/</g, '&lt;');
-                content += "<b>Cyhalofop:</b> " + escapedValue + " µg/L<br>"; 
-            } 
-            // Metolachlor
-            if (e.target.feature.properties.Metolachlor !== "NA"){
-                const escapedValue = e.target.feature.properties.Metolachlor.replace(/</g, '&lt;');
-                content += "<b>Metolachlor:</b> " + escapedValue + " µg/L<br>"; 
-            }
-            // Glyphosate
-            if (e.target.feature.properties.Glyphosate !== "NA"){
-                const escapedValue = e.target.feature.properties.Glyphosate.replace(/</g, '&lt;');
-                content += "<b>Glyphosate:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // AMPA
-            if (e.target.feature.properties.AMPA !== "NA"){
-                const escapedValue = e.target.feature.properties.AMPA.replace(/</g, '&lt;');
-                content += "<b>AMPA:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Acetochlor
-            if (e.target.feature.properties.Acetochlor !== "NA"){
-                const escapedValue = e.target.feature.properties.Acetochlor.replace(/</g, '&lt;');
-                content += "<b>Acetochlor:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Atrazine
-            if (e.target.feature.properties.Atrazine !== "NA"){
-                const escapedValue = e.target.feature.properties.Atrazine.replace(/</g, '&lt;');
-                content += "<b>Atrazine:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Azoxystrobin
-            if (e.target.feature.properties.Azoxystrobin !== "NA"){
-                const escapedValue = e.target.feature.properties.Azoxystrobin.replace(/</g, '&lt;');
-                content += "<b>Azoxystrobin:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Azinfos-methyl
-            if (e.target.feature.properties.Azinfos_methyl !== "NA"){
-                const escapedValue = e.target.feature.properties.Azinfos_methyl.replace(/</g, '&lt;');
-                content += "<b>Azinfos-methyl:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Cyproconazole
-            if (e.target.feature.properties.Cyproconazole !== "NA"){
-                const escapedValue = e.target.feature.properties.Cyproconazole.replace(/</g, '&lt;');
-                content += "<b>Cyproconazole:</b> " + escapedValue + " µg/L<br>"; 
-            }
-            
-            // Tebuconazole
-            if (e.target.feature.properties.Tebuconazole !== "NA"){
-                const escapedValue = e.target.feature.properties.Tebuconazole.replace(/</g, '&lt;');
-                content += "<b>Tebuconazole:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Fipronil-sulfona
-            if (e.target.feature.properties.Fipronil_sulfona !== "NA"){
-                const escapedValue = e.target.feature.properties.Fipronil_sulfona.replace(/</g, '&lt;');
-                content += "<b>Fipronil-sulfona:</b> " + escapedValue + " µg/L<br>"; 
-            } 
-
-            // Haloxyfop
-            if (e.target.feature.properties.Haloxyfop !== "NA"){
-                const escapedValue = e.target.feature.properties.Haloxyfop.replace(/</g, '&lt;');
-                content += "<b>Haloxyfop:</b> " + escapedValue + " µg/L<br>"; 
-            } 
-
-            // Haloxyfop-methyl
-            if (e.target.feature.properties.Haloxyfop_methyl !== "NA"){
-                const escapedValue = e.target.feature.properties.Haloxyfop_methyl.replace(/</g, '&lt;');
-                content += "<b>Haloxyfop-methyl:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Imazapic
-            if (e.target.feature.properties.Imazapic !== "NA"){
-                const escapedValue = e.target.feature.properties.Imazapic.replace(/</g, '&lt;');
-                content += "<b>Imazapic:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Imazethapyr
-            if (e.target.feature.properties.Imazethapyr !== "NA"){
-                const escapedValue = e.target.feature.properties.Imazethapyr.replace(/</g, '&lt;');
-                content += "<b>Imazethapyr:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // Metsulfuron-methyl
-            if (e.target.feature.properties.Metsulfuron_methyl !== "NA"){
-                const escapedValue = e.target.feature.properties.Metsulfuron_methyl.replace(/</g, '&lt;');
-                content += "Metsulfuron-methyl:</b> " + escapedValue + " µg/L<br>"; 
-            }
-
-            // No agrochemicals detected
-            if (content === "") {
-                content = "Not detected.";
-            }
-
-            info_p.innerHTML = content;
-        }
-
-        function show_legend(){
-            legend.addTo(map);
-        }
-
-        function remove_IBRI(){
-            IBRI_panel.remove();
-        }
-
-        function remove_Herbcs(){
-            Herbcs_panel.remove();
-        }
-
-        function remove_wqi(){
-            wqi_panel.remove();
-        }
-
-        function remove_legend(){
-            legend.remove();
-        }
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
         // STYLE SETTINGS FOR MARKERS, PANELS AND LEGEND
-        
-        // Regular icon
-        function iconByWQI(d) {
-            if (d > 80){
-                return myIcon = L.icon({
-                    iconUrl: 'images/droplet_markers/water_drop_gren.png',
-                    iconSize: [28, 28],
-                    iconAnchor: [12, 12],
-                }); // Excellent
-            } else if (d > 45){
-                return myIcon = L.icon({
-                    iconUrl: 'images/droplet_markers/water_drop_yellow.png',
-                    iconSize: [28, 28],
-                    iconAnchor: [12, 12],
-                }); // Good
-            }  else {
-                return myIcon = L.icon({
-                    iconUrl: 'images/droplet_markers/water_drop_red.png',
-                    iconSize: [28, 28],
-                    iconAnchor: [12, 12],
-                }); // Very Poor
-            }
-
-        }
-
-        // Big icon on mouseover
-        function BigIconByWQI(d) {
-            if (d > 80){
-                return myIcon = L.icon({
-                    iconUrl: 'images/droplet_markers/water_drop_gren.png',
-                    iconSize: [60, 60],
-                    iconAnchor: [35, 35],
-                }); // Excellent
-            } else if (d > 45){
-                return myIcon = L.icon({
-                    iconUrl: 'images/droplet_markers/water_drop_yellow.png',
-                    iconSize: [60, 60],
-                    iconAnchor: [35, 35],
-                }); // Good
-            }  else {
-                return myIcon = L.icon({
-                    iconUrl: 'images/droplet_markers/water_drop_red.png',
-                    iconSize: [60, 60],
-                    iconAnchor: [35, 35],
-                }); // Very Poor
-            }
-        }
-
-        function setIBRIBackground(color) { // Set IBRI panel bckg according to IBRI value
-            let panel = document.getElementById("ibri_panel");
-            if (panel) {
-                panel.style.backgroundColor = color;
-            }
-        }
-
-        function set_ibri_background(ibri_value) {
-            if (ibri_value > 19.07){
-                return '#a70000'
-            } else if (ibri_value > 14.72){
-                return '#ff0000'
-            } else if (ibri_value > 10.38){
-                return '#ff5252'
-            } else if (ibri_value > 6.03){
-                return '#ff7b7b'
-            } else {
-                return '#ffbaba'
-            }
-        }
-
+    
     </script>
 </body>
 </html>
