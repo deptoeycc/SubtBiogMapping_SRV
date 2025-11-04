@@ -23,14 +23,13 @@
         /* CLASS and id style settings */
         /* Style for the info object*/
         .info {
-            background-color: #e96b6bd5;
+            background-color: #e96b6bbe;
             padding: 0px;
             border-radius: 6px;
-            /*box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);*/
-            font-family: Arial, sans-serif;
+            font-family: 'DM Sans', sans-serif;
         }
 
-        /* Style for wqi panel */
+        /* Style for ini panel panel */
         #ini_panel {
             margin: 8px;
             padding: 0 0 0px;
@@ -40,12 +39,36 @@
         #infoIni_descp {
             margin: 10px;
             font-size: 15px;
-            color: #000000; /* Customize title color */
-            font-weight: bold;
+            color: #ffffff; /* Customize title color */
+            /*font-weight: bold;*/
             text-align: justify; /* Centers the text */
-            font-family: 'DM Sans', sans-serif; /* Sets the font */
+            /*font-family: 'DM Sans', sans-serif;*/ /* Sets the font */
         }
 
+        /* Style for wqi panel */
+        #info_panel {
+            margin: 8px;
+            padding: 0 0 0px;
+            margin-bottom: 5px;
+        }
+
+        #info_title {
+            margin: 10px;
+            font-size: 18px;
+            color: #ffffff; /* Customize title color */
+            font-weight: bold;
+            text-align: left; /* Centers the text */
+            /*font-family: 'DM Sans', sans-serif;*/ /* Sets the font */
+        }
+
+        #info_CurrFeat {
+            margin: 10px;
+            font-size: 15px;
+            color: black; /* Customize title color */
+            /*font-weight: bold;*/
+            text-align: left; /* Centers the text */
+            /*font-family: 'DM Sans', sans-serif;*/ /* Sets the font */
+        }
 
         #wqi_value {
             margin: 5px;
@@ -278,7 +301,7 @@
 
             infoIni.onAdd = function() {
                 let div = L.DomUtil.create("div", "info");
-                div.innerHTML = `<p id="infoIni_descp"> Pick a polygon to get information about the biogas production in the Unit of Analysis </p>`;
+                div.innerHTML = `<p id="infoIni_descp"> Pick a polygon to get information about the biogas production in the Unit of Analysis (SUA)</p>`;
                 div.style.width = divWidth //'30em';
                 div.id = "ini_panel";
                 return div;
@@ -297,8 +320,9 @@
 
             info.onAdd = function() {
                 let div = L.DomUtil.create("div", "info");
-                div.innerHTML = '<h4 id="dynamic-title" style="font-size: 17px;">Referencias</h4><p id="current_feature"></p>';
+                div.innerHTML = '<h4 id="info_title";">Referencias</h4><p id="info_CurrFeat"></p>';
                 div.style.width = divWidth;
+                div.id = "info_panel";
                 return div; // Return the div to be added to the map
             };
 
@@ -321,7 +345,7 @@
         function highlight_feature(e) {
             infoIni.remove()
             infoDiv('20em')
-            info_p = document.getElementById("current_feature");
+            info_p = document.getElementById("info_CurrFeat");
             info_h4 = document.getElementById("dynamic-title");
             e.target.setStyle(highlightStyle);
             e.target.bringToFront();
