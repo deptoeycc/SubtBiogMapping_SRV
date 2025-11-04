@@ -172,7 +172,18 @@
         .custom-control {
         padding: 0; /* Add space between the controls */
         }
-    
+        
+        .legend {
+        line-height: 18px;
+        color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
 
         /* Responsive design for smaller screens in portrair orientation */
         @media (max-width: 600px) and (orientation: portrait) {
@@ -294,18 +305,40 @@
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
         // Initial map element settings
-        let map = L.map("map", {zoomControl: false}).setView([-30.97, -60.20], 9);
+        let map = L.map("map", {zoomControl: false}).setView([-37.97, -63.20], 4.5);
 
         L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attribution/">CartoDB</a>',
             subdomains: "abcd",
-            maxZoom: 50
+            maxZoom: 20
         }).addTo(map);
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
 
+        let infoIni = L.control({position: "topright"});
         let info = L.control({position: "topright"});
+
+        // Initialize info_ini panel
+        infoIni.remove()
+
+        function show_infoIni(divWidth) {
+            if (infoIni._map) {
+                infoIni.remove(); // Remove existing control if already added
+            }
+
+            infoIni.onAdd = function() {
+                let div = L.DomUtil.create("div", "info");
+                div.innerHTML = `<p id="infoIni_descp"> Pick a polygon to get information about the biogas production in the Unit of Analysis </p>`;
+                div.style.width = divWidth //'30em';
+                div.id = "ini_panel";
+                return div;
+            };
+
+            infoIni.addTo(map);
+        }
+
+        show_infoIni('20em')
 
         function infoDiv(divWidth) {
             if (info._map) {
@@ -323,7 +356,7 @@
             info.addTo(map); // Add the control to the map
         }
 
-        infoDiv('15em')
+        //infoDiv('15em')
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // ---------------------------------------------------------------------------------------------------------------------------------
@@ -337,19 +370,25 @@
         };
 
         function highlight_feature(e) {
+            infoIni.remove()
             infoDiv('20em')
             info_p = document.getElementById("current_feature");
             info_h4 = document.getElementById("dynamic-title");
             e.target.setStyle(highlightStyle);
             e.target.bringToFront();
-            info_h4.innerText = "Departamentos"
-            //info_p.innerHTML =
-            //    "<b>Provincia:</b> " + e.target.feature.properties.nam_left + "<br>" +
-            //    "<b>Departamento:</b> " + e.target.feature.properties.nam_right + "<br>";
+            info_h4.innerText = "SUA Description"
+            info_p.innerHTML =
+                "<b>Aggregated Potential Biogas Generation [m<sup>3</sup>/d]:</b> " + e.target.feature.properties.GenB_Total_m3d + "<br>" +
+                "<b>Bagasse Contribution [%] :</b> " + e.target.feature.properties.percj_Bagasse + "<br>" +
+                "<b>Swin Manure Contribution [%]:</b> " + e.target.feature.properties.percj_SwinMan + "<br>" +
+                "<b>WDGS Contribution [%]:</b> " + e.target.feature.properties.percj_WDGS + "<br>" +
+                "<b>Province Centroid</b> " + e.target.feature.properties.Provincia + "<br>" +
+                "<b>Department Centroid</b> " + e.target.feature.properties.Departamento + "<br>";
         }
 
         function reset_highlight(e, gjLayer) {
-            infoDiv('15em')
+            info.remove()
+            show_infoIni('20em')
             e.target.bringToBack();
             gjLayer.resetStyle(e.target);
             info_p.innerHTML = "";
@@ -358,31 +397,6 @@
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
-        // LOAD AND PROCESS SAMPLING POINTS GEOJSON DATA
-
-        // Initializing political boundaries layers
-        let geojsonLayer01;
-        let layerGroup01 = L.layerGroup()// Departments boundaries
-
-        // Loading Argentina departments boundaries layer
-        fetch("data/biogasGen_total_data_03.geojson")
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                    geojsonLayer01 = L.geoJSON(data, {
-                        style: stat_style,
-                        onEachFeature: function(feature, layer) {
-                            layer.on("mouseover", highlight_feature);
-                            layer.on("mouseout", function(e) {
-                                reset_highlight(e, geojsonLayer01);
-                            });
-                        }
-                    });
-                    geojsonLayer01.addTo(map);
-                });
-
-        
         // Study area layers ---------------------------------------------------------------------------------------------------------------
 
         // Loading Argentina boundaries layer
@@ -416,47 +430,102 @@
                 .addTo(map);
             });
 
+        // Loading Argentina provinces boundaries layer
+        fetch("data/Argentina_gridH3_level3_clean.geojson")
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {  // Add GeoJSON layer to the map once the file is loaded
+                L.geoJSON(data, {style : {
+                    weight : 1,
+                    color : "black",
+                    fillColor : "none",
+                    }
+            })
+                .addTo(map);
+            });
+
+
+
+        // Initializing political boundaries layers
+        let geojsonLayer01;
+        let layerGroup01 = L.layerGroup()// Departments boundaries
+
+        // Loading Argentina departments boundaries layer
+        fetch("data/biogasGen_total_data_03May30m3d.geojson")
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                    geojsonLayer01 = L.geoJSON(data, {
+                        style: stat_style,
+                        onEachFeature: function(feature, layer) {
+                            layer.on("mouseover", highlight_feature);
+                            layer.on("mouseout", function(e) {
+                                reset_highlight(e, geojsonLayer01);
+                            });
+                        }
+                    });
+                    geojsonLayer01.addTo(map);
+                });
+
+        // Loading Argentina provinces boundaries layer
+        fetch("data/biogasGen_total_data_03May30m3d_May07.geojson")
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {  // Add GeoJSON layer to the map once the file is loaded
+                L.geoJSON(data, {style : {
+                    weight : 4,
+                    color : "#d5c10b",
+                    fillColor : "none",
+                    }
+            })
+                .addTo(map);
+            });
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
 
+            //[0, 24000, 48000, 72000, 96000, 120000, 144000, 168000, 200000]
+            
         function stat_color(d) {
             if (d > 208031) return "#d7191c";
             if (d > 200031) return "#dd3027";
-            if (d > 192031) return "#e34731";
-            if (d > 184031) return "#ee7546";
-            if (d > 176031) return "#f48c51";
-            if (d > 168031) return "#faa35c";
-            if (d > 160031) return "#fdb468";
-            if (d > 152031) return "#fdc177";
-            if (d > 144031) return "#fecd85";
-            if (d > 136031) return "#feda94";
-            if (d > 128031) return "#fee6a2";
-            if (d > 120031) return "#006837";
-            if (d > 112031) return "#004529";
-            if (d > 104031) return "#2c7bb6";
-            if (d > 96031)  return "#4575b4";
-            if (d > 88031)  return "#74add1";
-            if (d > 80031)  return "#abd9e9";
-            if (d > 72031)  return "#e0f3f8";
-            if (d > 64031)  return "#ffffcc";
-            if (d > 56031)  return "#ffeda0";
-            if (d > 48031)  return "#feb24c";
-            if (d > 40031)  return "#fd8d3c";
-            if (d > 32031)  return "#f03b20";
-            if (d > 24031)  return "#bd0026";
-            if (d > 16031)  return "#800026";
-            if (d > 8031)   return "#4d004b";
-            if (d > 0) "#2b83ba";
+            if (d > 192031) return "#e34731";//
+            if (d > 184031) return "#e95e3c";
+            if (d > 176031) return "#ee7546";
+            if (d > 168031) return "#f48c51"; //
+            if (d > 160031) return "#faa35c";
+            if (d > 152031) return "#fdb468";
+            if (d > 144031) return "#fdc177"; //
+            if (d > 136031) return "#fecd85";
+            if (d > 128031) return "#feda94";
+            if (d > 120031) return "#fee6a2"; //
+            if (d > 112031) return "#fff3b1";
+            if (d > 104031) return "#ffffbf";
+            if (d > 96031)  return "#f2fabb"; //
+            if (d > 88031)  return "#e5f5b7";
+            if (d > 80031)  return "#d8efb3";
+            if (d > 72031)  return "#cbeaae"; //
+            if (d > 64031)  return "#bee5aa";
+            if (d > 56031)  return "#b1e0a6";
+            if (d > 48031)  return "#a1d6a6"; //
+            if (d > 40031)  return "#8dc8a9";
+            if (d > 32031)  return "#7abaac";
+            if (d > 24031)  return "#66adb0"; //
+            if (d > 16031)  return "#529fb3"; 
+            if (d > 8031)   return "#3f91b7";
+            if (d > 0) return "#2b83ba"; //
             return "None";
             }
 
         function stat_style(feature) {
             return {
-                fillColor: stat_color(feature.properties.GenB_Total_m3y),
+                fillColor: stat_color(feature.properties.GenB_Total_m3d),
                 weight: 1,
                 opacity: 1,
                 color: "black",
-                fillOpacity: 1
+                fillOpacity: 0.7
             };
         }
 
@@ -468,21 +537,25 @@
 
         // Legend panel--------------------------------------------------------------------------------------------------------------------------
         
-        /*let legend = L.control({position: "bottomleft"}); // Create Leaflet control object for legend
+        var legend = L.control({position: 'bottomleft'});
 
-        legend.onAdd = function() { // Function that runs when legend is added to map
-            let div = L.DomUtil.create("div", "info");        
-            div.innerHTML = 
-                '<div class="legend-title">WQI references</div>' +
-                '<div class="legend-item"><img src="images/droplet_markers/water_drop_green.png" style="width:20px; height:20px; margin-right:5px; vertical-align:middle;">Good-Excellent</div>'+
-                '<div class="legend-item"><img src="images/droplet_markers/water_drop_yellow.png" style="width:20px; height:20px; margin-right:5px; vertical-align:middle;">Marginal-Bad</div>'+
-                '<div class="legend-item"><img src="images/droplet_markers/water_drop_red.png" style="width:20px; height:20px; margin-right:5px; vertical-align:middle;">Very poor-Poor</div>';
-            div.style.width = '13em';
-            div.id = "legend_panel";
+        legend.onAdd = function (map) {
+
+            var div = L.DomUtil.create('div', 'info legend'),
+                grades = [0, 24000, 48000, 72000, 96000, 120000, 144000, 168000, 200000],
+                labels = [];
+
+            // loop through our density intervals and generate a label with a colored square for each interval
+            for (var i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + stat_color(grades[i] + 1) + '"></i> ' +
+                    grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            }
+
             return div;
         };
 
-        legend.addTo(map); // Add Legend to Map */
+        legend.addTo(map);
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
