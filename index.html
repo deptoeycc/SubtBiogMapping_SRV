@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Land use changes and anthropogenic impacts due to rice fields in Santa Fe (Argentina)</title>
+    <title>Potential Biogas Generation Methodology (INTI-DEyCC) Demo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="css/leaflet.css">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -156,11 +156,7 @@
                 max-width: 60%;
                 font-size: 14px;
             }
-            .leaflet-control-layers {
-                width: 90%; /* Fill the panel */
-                max-width: none;
-                font-size: 14px;
-            }
+
             .info {
                 max-width: 40%;
                 font-size: 14px;
@@ -176,17 +172,19 @@
     <script>
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
-        // Initial map element settings
+        // INITIAL MAP SETTINGS
+
         let map = L.map("map", {zoomControl: false}).setView([-37.97, -63.20], 4.5);
 
         L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attribution/">CartoDB</a>',
             subdomains: "abcd",
-            maxZoom: 20
+            maxZoom: 15
         }).addTo(map);
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
+        // MAIN PANELS INITIALIZATION
 
         let infoIni = L.control({position: "topright"});
         let info = L.control({position: "topright"});
@@ -229,16 +227,13 @@
             info.addTo(map); // Add the control to the map
         }
 
-        //infoDiv('15em')
-
         // -------------------------------------------------------------------------------------------------------------------------------------
         // ---------------------------------------------------------------------------------------------------------------------------------
-
-        // COMPLEMENTARY FUNCTIONS FOR SAMPLINSG POINTS DATA PROCESSING DEFINITION
+        // COMPLEMENTARY FUNCTIONS FOR LAYERS INTERACTION
 
         let highlightStyle = {
             weight: 5,
-            color: "yellow",
+            color: "grey",
             fillOpacity: 0.5
         };
 
@@ -280,7 +275,8 @@
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
-        // Study area layers ---------------------------------------------------------------------------------------------------------------
+
+        // COMPLEMENTARY LAYERS  ---------------------------------------------------------------------------------------------------------------
 
         // Loading Argentina boundaries layer
         fetch("data/Argentina_bound.geojson")
@@ -313,7 +309,7 @@
                 .addTo(map);
             });
 
-        // Loading Argentina provinces boundaries layer
+        // Loading uber h3 grid level 3 for Argentina
         fetch("data/Argentina_gridH3_level3_clean.geojson")
             .then(function(response) {
                 return response.json();
@@ -328,13 +324,13 @@
                 .addTo(map);
             });
 
+        // BIOGAS POTENTIAL LAYER  ---------------------------------------------------------------------------------------------------------------
 
-
-        // Initializing political boundaries layers
+        // Initializing layer and layer group
         let geojsonLayer01;
         let layerGroup01 = L.layerGroup()// Departments boundaries
 
-        // Loading Argentina departments boundaries layer
+        // Loading biogas potential generation estimations
         fetch("data/biogasGen_total_data_03May30m3d.geojson")
             .then(function(response) {
                 return response.json();
@@ -352,7 +348,7 @@
                     geojsonLayer01.addTo(map);
                 });
 
-        // Loading Argentina provinces boundaries layer
+        // Loading biogas potential generation estimations (>0.7 MWh/d)
         fetch("data/biogasGen_total_data_03May30m3d_May07.geojson")
             .then(function(response) {
                 return response.json();
@@ -366,10 +362,10 @@
             })
                 .addTo(map);
             });
-        // -------------------------------------------------------------------------------------------------------------------------------------
-        // -------------------------------------------------------------------------------------------------------------------------------------
 
-            //[0, 24000, 48000, 72000, 96000, 120000, 144000, 168000, 200000]
+        // -------------------------------------------------------------------------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------------------------------
+        // SET BIOGAS GENERATION ESTIMATIONS LAYERS STYLE ACCORDING TO THE POSTER
             
         function stat_color(d) {
             if (d > 208031) return "#d7191c";
@@ -412,14 +408,10 @@
             };
         }
 
-
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
+        // LEGEND PANEL
 
-        // PANELS AND CONTROLS CONFIGURATION
-
-        // Legend panel--------------------------------------------------------------------------------------------------------------------------
-        
         var legend = L.control({position: 'bottomright'});
 
         legend.onAdd = function (map) {
@@ -432,7 +424,6 @@
             
             div.style.width = 'auto';
             div.innerHTML = '<h4 id="legend_title";">Potential Biogas<br>Generation</h4>';
-            //div.id = "div_legend";
 
             // loop through our density intervals and generate a label with a colored square for each interval
             for (var i = 0; i < grades.length; i++) {
@@ -447,10 +438,6 @@
         };
 
         legend.addTo(map);
-
-        // -------------------------------------------------------------------------------------------------------------------------------------
-        // -------------------------------------------------------------------------------------------------------------------------------------
-        // STYLE SETTINGS FOR MARKERS, PANELS AND LEGEND
     
     </script>
 </body>
