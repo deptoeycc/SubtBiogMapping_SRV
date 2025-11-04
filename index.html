@@ -69,93 +69,38 @@
             text-align: left; /* Centers the text */
             /*font-family: 'DM Sans', sans-serif;*/ /* Sets the font */
         }
-
-        #wqi_value {
-            margin: 5px;
-            padding: 0 0 0px;
-            font-size: 20px;
-            font-weight: bold;
-            color: black;
-        }
-
-        #current_feature_wqi {
-            margin: 5px;
-            padding: 0 0 0px;
-            font-size: 14px;
-            color: black;
-        }
-
-        /* Style for IBRI panel */
-        #ibri_value {
-            margin: 8px;
-            padding: 0 0 0px;
-            font-size: 20px;
-            font-weight: bold;
-            color: black;
-            text-align: center;   /* ✅ Center text */
-            display: block;       /* Ensures it takes full width */
-            width: 100%; 
-        }
-
-        /* Style for herbcs panel */
-        #dynamic-title_herbcs {
-            margin: 5px;
-            padding: 0 0 4px;
-            font-size: 13px;
-            color: #133131;/* Customize title color */
-            margin-bottom: 5px;
-        }
-
-        #current_feature_herbcs {
-            margin: 5px;
-            padding: 0 0 0px;
-            font-size: 12px;
-            color: black;
-        }
-
-        /* Style for the entire legend container */
-        #legend_panel .legend-title {
-            margin: 5px;
-            padding: 0 5px 2px;
-            font-size: 17px;
-            color: #133131;/* Customize title color */
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        #legend_panel .legend-item {
-            margin: 5px;
-            padding: 0 0 4px;
-            font-size: 14px;
-            color:  black;/* Customize title color */
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        /* Style for layers controller panel */
-        #panel {
-            background-color: #697f3dd6;
-            padding: 10px;
-            border-radius: 6px;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
-            font-family: Arial, sans-serif;
-        }
-
-        .custom-control {
-        padding: 0; /* Add space between the controls */
-        }
         
         .legend {
-        line-height: 18px;
-        color: #555;
+            margin: 10px;
+            padding: 8px 12px;
+            line-height: 18px;
+            color: black;
+            font-size: 14px;
+            border-radius: 8px;
         }
+
+        #legend_title {
+            font-size: 18px;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: left;
+            margin: 0 0 5px 0; /* ✅ separación vertical mínima (2–3 px) */
+        }
+
+        /* 🔧 Cada línea de color y texto en una fila horizontal */
+        .legend-row {
+            display: flex;
+            align-items: center; /* centra verticalmente caja y texto */
+            margin-bottom: 0px; /* pequeño espacio entre filas */
+        }
+
         .legend i {
             width: 18px;
             height: 18px;
-            float: left;
             margin-right: 8px;
-            opacity: 0.7;
+            opacity: 1;
         }
+
 
         /* Responsive design for smaller screens in portrair orientation */
         @media (max-width: 600px) and (orientation: portrait) {
@@ -344,7 +289,7 @@
 
         function highlight_feature(e) {
             infoIni.remove()
-            infoDiv('20em')
+            infoDiv('24em')
             info_p = document.getElementById("info_CurrFeat");
             info_h4 = document.getElementById("info_title");
             e.target.setStyle(highlightStyle);
@@ -527,16 +472,20 @@
             //legend.innerText = "Potential Biogas Generation"
 
             var div = L.DomUtil.create('div', 'info legend'),
-                grades = [0, 24000, 48000, 72000, 96000, 120000, 144000, 168000, 200000],
+                grades = [30, 24000, 48000, 72000, 96000, 120000, 144000, 168000, 200000],
                 labels = [];
-
-            div.innerHTML = '<h4 id="dynamic-title" style="font-size: 17px;">Potential Biogas Generation</h4><p id="current_feature"></p>';
+            
+            div.style.width = 'auto';
+            div.innerHTML = '<h4 id="legend_title";">Potential Biogas<br>Generation</h4>';
+            //div.id = "div_legend";
 
             // loop through our density intervals and generate a label with a colored square for each interval
             for (var i = 0; i < grades.length; i++) {
                 div.innerHTML +=
-                    '<i style="background:' + stat_color(grades[i] + 1) + '"></i> ' +
-                    (i < grades.length - 1 ? grades[i] : grades[i] + '+') + '<br>';
+                    '<div class="legend-row">' +
+                    '<i style="background:' + stat_color(grades[i] + 1) + '"></i>' +
+                    (i < grades.length - 1 ? grades[i] : grades[i] + '+') +
+                    '</div>';
             }
 
             return div;
