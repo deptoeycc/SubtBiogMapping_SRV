@@ -4,6 +4,7 @@
     <title>Land use changes and anthropogenic impacts due to rice fields in Santa Fe (Argentina)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="css/leaflet.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="js/leaflet.js"></script>
     <style>
         body {
@@ -22,81 +23,29 @@
         /* CLASS and id style settings */
         /* Style for the info object*/
         .info {
-            background-color: #afc3c3;
+            background-color: #e96b6bd5;
             padding: 0px;
             border-radius: 6px;
             /*box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);*/
             font-family: Arial, sans-serif;
         }
 
-        /* Style layers controller panel */
-        #layers_panel {
-            width: 220px;
-            padding: 6px;  /* optional: adjust padding inside the panel */
-        }
-
-        #layers_panel .panel-title {
-            margin: 0;        /* remove top and bottom margin */
-            padding: 0 0 4px; /* optional: keep a small bottom padding */
-            font-size: 17px;  /* adjust size if needed */
-            color:#133131;
-        }
-
-        #layers_panel .leaflet-control-layers {
-            margin-top: 0; /* reduce space above layers selector */
-            width: 100%;
-            padding: 0px;
-            background: transparent !important;
-            border: none !important; /* Make the border line transparent */
-            color:#0a090a; /* Change text color */
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-        }
-
-
-        /* Style dropdown button */
-        #ddbutton_control{
-            /*background-color: #afc3c3;*/
-            width: 220px;
-            padding: 6px;
-            /*border-radius: 6px; */
-        }
-
-        #ddbutton_control .dropdown {
-            background-color: #afc3c3;
-            width: 100%;         /* make dropdown fill container */
-            padding: 2px 6px;
-            border: none;
-            outline: none;
-            color:#0a090a;  /* Change text color */
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            font-weight: bold;
-            
-        }
-
-        #ddbutton_control .panel-title {
-            margin: 0;        /* remove top and bottom margin */
-            padding: 0 0 4px; /* optional: keep a small bottom padding */
-            font-size: 17px;  /* adjust size if needed */
-            color:#133131;
-            font-family: Arial, sans-serif;
-        }
-
-        #ddbutton_control .dropdown option {
-            font-size: 14px;
-            padding: 4px;
-        }
-
-
         /* Style for wqi panel */
-        #dynamic-title_wqi {
-            margin: 5px;
-            padding: 0 0 4px;
-            font-size: 17px;
-            color: #133131;/* Customize title color */
+        #ini_panel {
+            margin: 8px;
+            padding: 0 0 0px;
             margin-bottom: 5px;
         }
+
+        #infoIni_descp {
+            margin: 10px;
+            font-size: 15px;
+            color: #000000; /* Customize title color */
+            font-weight: bold;
+            text-align: justify; /* Centers the text */
+            font-family: 'DM Sans', sans-serif; /* Sets the font */
+        }
+
 
         #wqi_value {
             margin: 5px;
@@ -537,60 +486,29 @@
 
         // Legend panel--------------------------------------------------------------------------------------------------------------------------
         
-        var legend = L.control({position: 'bottomleft'});
+        var legend = L.control({position: 'bottomright'});
 
         legend.onAdd = function (map) {
+
+            //legend.innerText = "Potential Biogas Generation"
 
             var div = L.DomUtil.create('div', 'info legend'),
                 grades = [0, 24000, 48000, 72000, 96000, 120000, 144000, 168000, 200000],
                 labels = [];
 
+            div.innerHTML = '<h4 id="dynamic-title" style="font-size: 17px;">Potential Biogas Generation</h4><p id="current_feature"></p>';
+
             // loop through our density intervals and generate a label with a colored square for each interval
             for (var i = 0; i < grades.length; i++) {
                 div.innerHTML +=
                     '<i style="background:' + stat_color(grades[i] + 1) + '"></i> ' +
-                    grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+                    (i < grades.length - 1 ? grades[i] : grades[i] + '+') + '<br>';
             }
 
             return div;
         };
 
         legend.addTo(map);
-
-        // -------------------------------------------------------------------------------------------------------------------------------------
-        // -------------------------------------------------------------------------------------------------------------------------------------
-        // PANELS AND CONTROLS EVENTS
-
-
-        function info_feature_SamPoints(e) {
-            //wqi_panel.addTo(map);
-            show_wqi_panel('30em');
-            wqi_h4 = document.getElementById("dynamic-title_wqi");
-            wqi_p_wqi = document.getElementById("wqi_value");
-            wqi_p_params = document.getElementById("current_feature_wqi");
-            wqi_p_wqi.innerHTML = "Water Quality Index (WQI): " + e.target.feature.properties.WQI + " (" + label_wqi(e.target.feature.properties.WQI) + ")"; //+ "<br>" +
-            wqi_h4.innerText = e.target.feature.properties.Description//"Sampling point & WQI info"
-
-            wqi_p_params.innerHTML =
-            //"Point description: " + e.target.feature.properties.Description + "<br>"+
-            "<b>pH:</b> " + e.target.feature.properties.ph_WQI + "<br>" +
-            "<b>Conductivity:</b> " + e.target.feature.properties.EC_WQI + " uS/cm" + "<br>" +
-            "<b>DO:</b> " + e.target.feature.properties.DO_WQI + " mg/L" + "<br>" +
-            "<b>TSS:</b> " + e.target.feature.properties.TSS_WQI + " mg/L" + "<br>" +
-            "<b>DBO5:</b> " + e.target.feature.properties.BOD5_WQI + " mg/L" + "<br>" +
-            "<b>Nitrate:</b> " + e.target.feature.properties.Nitrate_WQI + " mg/L" + "<br>" +
-            "<b>Nitrite:</b> " + e.target.feature.properties.Nitrite_WQI + " mg/L" + "<br>" +
-            "<b>Ammonium:</b> " + e.target.feature.properties.Ammonium_WQI + " mg/L" + "<br>" +
-            "<b>Phosphate:</b> " + e.target.feature.properties.Phosphate_WQI + " mg/L" + "<br>" +
-            "<b>Cr:</b> " + e.target.feature.properties.Cr_WQI + " mg/L" + "<br>" +
-            "<b>Cu:</b> " + e.target.feature.properties.Cu_WQI + " mg/L" + "<br>" +
-            "<b>As:</b> " + e.target.feature.properties.As_WQI + " mg/L" + "<br>" +
-            "<b>Zn:</b> " + e.target.feature.properties.Zn_WQI + " mg/L" + "<br>" +
-            "<b>Mn:</b> " + e.target.feature.properties.Mn_WQI + " mg/L" + "<br>" +
-            "<b>Ni:</b> " + e.target.feature.properties.Ni_WQI + " mg/L" + "<br>" +
-            "<b>Pb:</b> " + e.target.feature.properties.Pb_WQI + " mg/L" + "<br>" +
-            "<b>Observations:</b> " + e.target.feature.properties.Observation + "<br>";
-        }
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
