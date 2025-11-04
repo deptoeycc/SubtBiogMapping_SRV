@@ -107,7 +107,7 @@
 
                 /* Style for wqi panel */
                 #ini_panel {
-                    max-width: 45%;
+                    max-width: 60%;
                     /*pointer-events: none; */ /* clicks pass through */ 
                 }
 
@@ -117,7 +117,7 @@
 
                 /* Style for IBRI panel */
                 #info_panel {
-                    max-width: 45%;
+                    max-width: 60%;
                 }
 
                 #info_title {
@@ -130,7 +130,7 @@
 
                 /* Style for the entire legend container */
                 #legend{
-                    bottom: 30px;
+                    bottom: 40px;
                 }
 
                 #legend_title {
@@ -174,7 +174,7 @@
         // -------------------------------------------------------------------------------------------------------------------------------------
         // INITIAL MAP SETTINGS
 
-        let map = L.map("map", {zoomControl: false}).setView([-37.97, -63.20], 3);
+        let map = L.map("map", {zoomControl: false}).setView([-37.97, -63.20], 4.5);
 
         L.tileLayer("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attribution/">CartoDB</a>',
@@ -423,7 +423,7 @@
                 labels = [];
             
             div.style.width = 'auto';
-            div.innerHTML = '<h4 id="legend_title";">Potential Biogas<br>Generation</h4>';
+            div.innerHTML = '<h4 id="legend_title";">Potential Biogas<br>Generation [m<sup>3</sup>/d]</h4>';
 
             // loop through our density intervals and generate a label with a colored square for each interval
             for (var i = 0; i < grades.length; i++) {
