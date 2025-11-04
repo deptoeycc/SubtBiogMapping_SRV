@@ -346,15 +346,25 @@
             infoIni.remove()
             infoDiv('20em')
             info_p = document.getElementById("info_CurrFeat");
-            info_h4 = document.getElementById("dynamic-title");
+            info_h4 = document.getElementById("info_title");
             e.target.setStyle(highlightStyle);
             e.target.bringToFront();
             info_h4.innerText = "SUA Description"
+
+            // Format contribution data
+            const valueBgss = e.target.feature.properties.percj_Bagasse;
+            const formValBgss = valueBgss != null ? Number(valueBgss).toFixed(2) : "N/A";
+            const valueSM = e.target.feature.properties.percj_SwinMan;
+            const formValSM = valueSM != null ? Number(valueSM).toFixed(2) : "N/A";
+            const valueWDGS = e.target.feature.properties.percj_WDGS;
+            const formValWDGS = valueWDGS != null ? Number(valueWDGS).toFixed(2) : "N/A";
+            
+
             info_p.innerHTML =
                 "<b>Aggregated Potential Biogas Generation [m<sup>3</sup>/d]:</b> " + e.target.feature.properties.GenB_Total_m3d + "<br>" +
-                "<b>Bagasse Contribution [%] :</b> " + e.target.feature.properties.percj_Bagasse + "<br>" +
-                "<b>Swin Manure Contribution [%]:</b> " + e.target.feature.properties.percj_SwinMan + "<br>" +
-                "<b>WDGS Contribution [%]:</b> " + e.target.feature.properties.percj_WDGS + "<br>" +
+                "<b>Bagasse Contribution [%] :</b> " + formValBgss + "<br>" +
+                "<b>Swin Manure Contribution [%]:</b> " + formValSM + "<br>" +
+                "<b>WDGS Contribution [%]:</b> " + formValWDGS + "<br>" +
                 "<b>Province Centroid</b> " + e.target.feature.properties.Provincia + "<br>" +
                 "<b>Department Centroid</b> " + e.target.feature.properties.Departamento + "<br>";
         }
