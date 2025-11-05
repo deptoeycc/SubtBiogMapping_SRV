@@ -328,6 +328,7 @@
 
         // Initializing layer and layer group
         let geojsonLayer01;
+        let geojsonLayer02;
         let layerGroup01 = L.layerGroup()// Departments boundaries
 
         // Loading biogas potential generation estimations
@@ -348,20 +349,38 @@
                     geojsonLayer01.addTo(map);
                 });
 
-        // Loading biogas potential generation estimations (>0.7 MWh/d)
-        fetch("data/biogasGen_total_data_03May30m3d_May07.geojson")
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {  // Add GeoJSON layer to the map once the file is loaded
-                L.geoJSON(data, {style : {
-                    weight : 4,
-                    color : "#d5c10b",
-                    fillColor : "none",
-                    }
-            })
-                .addTo(map);
-            });
+        // 🔹 1. General delay function
+        function delayExecution(callback, delayMs) {
+            setTimeout(() => {
+                console.log(`⏱️ Running delayed task after ${delayMs / 1000} seconds`);
+                callback();
+            }, delayMs);
+        }
+
+        // 🔹 2. Function to load and display the biogas layer
+        function loadBiogasLayer() {
+            fetch("data/biogasGen_total_data_03May30m3d_May07.geojson")
+                .then(response => response.json())
+                .then(data => {
+                    let geojsonLayer02 = L.geoJSON(data, {
+                        style: {
+                            weight: 4,
+                            color: "#d5c10b",
+                            fillColor: "none"
+                        }
+                    }).addTo(map);
+
+                    // Ensure the layer is above everything
+                    geojsonLayer02.bringToFront();
+
+                    console.log("✅ Biogas layer added and brought to front.");
+                })
+                .catch(err => console.error("Error loading biogas layer:", err));
+        }
+
+        // 🔹 3. Use both together
+        delayExecution(loadBiogasLayer, 1000); // delay = 2 seconds
+
 
         // -------------------------------------------------------------------------------------------------------------------------------------
         // -------------------------------------------------------------------------------------------------------------------------------------
