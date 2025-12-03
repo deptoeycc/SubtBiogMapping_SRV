@@ -21,9 +21,9 @@ IMGE
 
 
 
-**Keywords:** Agrochemicals, Argentina, ecotoxicology, land use change, remote sensing, rice fields
+**Keywords:** 
 
-**Author's contact:** Carlos David Clauser, [cdclauser@unsam.edu.ar](mailto:cdclauser@unsam.edu.ar)
+**Author's contact:** , [](mailto:)
 
 
 #### Afiliations
